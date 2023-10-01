@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+XSlRU3SXllDhYfW6IQ4RGcbphtpUJg9SW5olRXLn5q+3Gg" crossorigin="anonymous">
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://e0.pxfuel.com/wallpapers/701/771/desktop-wallpaper-quiz.jpg'); /* Replace with the path to your image */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            text-align: center;
+        }
+
+        .quiz-container {
+            background-color: rgba(255, 255, 255, 0.8); /* Add a semi-transparent white background to the quiz container */
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            margin-top: 0;
+        }
+
+        .question-container {
+            margin: 20px 0;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: #2980b9;
+        }
+
+        #next-button {
+            background-color: #2ecc71;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #next-button:hover {
+            background-color: #27ae60;
+        }
+
+        #retake-button {
+            background-color: #e74c3c;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #retake-button:hover {
+            background-color: #c0392b;
+        }
+
+        .score-container {
+            margin-top: 20px;
+        }
+
+        .score-container p {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Quiz Time!</h1>
+        <div class="question-container">
+            <p id="question"></p>
+            <div id="timer">Time left: 20 seconds</div>
+            <!-- ... (rest of your HTML) -->
+        </div>
+        
+        <div class="options-container">
+            <button class="option" onclick="checkAnswer(0)"></button>
+            <button class="option" onclick="checkAnswer(1)"></button>
+            <button class="option" onclick="checkAnswer(2)"></button>
+            <button class="option" onclick="checkAnswer(3)"></button>
+        </div>
+        <button id="next-button" onclick="nextQuestion()">Next</button>
+        <button id="retake-button" onclick="retakeQuiz()">Retake Test</button>    </div>
+    <div class="score-container">
+        <p>Score: <span id="score">0</span></p>
+    </div>
+    
+    <script>
+        const questions = [
+            {
+                questionText: "Jimmy's father has three sons- Paul I and Paul II. Can you guess the name of the third son?",
+                answerOptions: [
+                    { text: "Paul III", isCorrect: false },
+                    { text: "Jerin", isCorrect: false },
+                    { text: "Jimmy", isCorrect: true },
+                    { text: "Madrid", isCorrect: false }
+                ]
+            },
+            {
+                questionText: "Which of the following languages is NOT driven from Latin?",
+                answerOptions: [
+                    { text: "French", isCorrect: false },
+                    { text: "English", isCorrect: true },
+                    { text: "Portuguese", isCorrect: false },
+                    { text: "All", isCorrect: false }
+                ]
+            },
+            {
+                questionText: "In what year did the First World War end?",
+                answerOptions: [
+                    { text: "1918", isCorrect: true },
+                    { text: "1916", isCorrect: false },
+                    { text: "1920", isCorrect: false },
+                    { text: "1924", isCorrect: false }
+                ]
+            },
+            {
+                questionText: "What colour are the stars in the flag of New Zealand?",
+                answerOptions: [
+                    { text: "White", isCorrect: false },
+                    { text: "Red", isCorrect: true },
+                    { text: "Blue", isCorrect: false },
+                    { text: "Yellow", isCorrect: false }
+                ]
+            },
+            {
+                questionText: "In Marvel Cinematic Universe(MCU) What does the ‘S’ in S.H.I.E.L.D. stand for?",
+                answerOptions: [
+                    { text: "Security", isCorrect: false },
+                    { text: "State", isCorrect: false },
+                    { text: "Supreme", isCorrect: false },
+                    { text: "Strategic", isCorrect: true }
+                ]
+            }
+        ];
+
+
+let currentQuestionIndex = 0;
+let score = 0;
+let timer;
+const timerElement = document.getElementById("timer");
+let timeLeft = 10; 
+
+const questionElement = document.getElementById("question");
+const optionsElements = document.querySelectorAll(".option");
+const nextButton = document.getElementById("next-button");
+const retakeButton = document.getElementById("retake-button");
+const scoreElement = document.getElementById("score");
+
+function startQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    showQuestion(currentQuestionIndex);
+    updateScore();
+    startTimer(); // Start the timer when the quiz begins
+    optionsElements.forEach((option, index) => {
+        option.style.backgroundColor = "#3498db";
+        option.disabled = false;
+    });
+    nextButton.style.display = "block";
+    retakeButton.style.display = "none";
+}
+
+function showQuestion(questionIndex) {
+    const question = questions[questionIndex];
+    questionElement.innerText = question.questionText;
+    question.answerOptions.forEach((option, index) => {
+        optionsElements[index].innerText = option.text;
+    });
+}
+
+function checkAnswer(selectedOptionIndex) {
+    clearTimeout(timer); // Stop the timer
+    const question = questions[currentQuestionIndex];
+    const selectedOption = question.answerOptions[selectedOptionIndex];
+    if (selectedOption.isCorrect) {
+        score++;
+    }
+    optionsElements[selectedOptionIndex].style.backgroundColor = selectedOption.isCorrect ? "#2ecc71" : "#e74c3c";
+    optionsElements.forEach((option, index) => {
+        option.disabled = true;
+    });
+    nextButton.style.display = "block";
+    retakeButton.style.display = "none";
+    updateScore();
+}
+
+
+
+function endQuiz() {
+    questionElement.innerText = "Quiz Complete!";
+    optionsElements.forEach((option) => {
+        option.style.display = "none";
+    });
+    nextButton.style.display = "none";
+    retakeButton.style.display = "block";
+    scoreElement.innerText = `Final Score: ${score}/${questions.length}`;
+}
+
+function updateScore() {
+    scoreElement.innerText = `Score: ${score}/${currentQuestionIndex}`;
+}
+
+// ... (previous code)
+
+function startTimer() {
+  timerElement.textContent = `Time left: ${timeLeft} seconds`;
+  timer = setInterval(function () {
+    timeLeft--;
+    if (timeLeft === 0) {
+      nextQuestion();
+    } else {
+      timerElement.textContent = `Time left: ${timeLeft} seconds`;
+    }
+  }, 1000);
+}
+function retakeQuiz(){
+            location.reload();
+        }
+
+function nextQuestion() {
+    clearTimeout(timer); // Stop the timer
+    timeLeft = 10; // Reset the timer to 10 seconds
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        optionsElements.forEach((option, index) => {
+            option.style.backgroundColor = "#3498db";
+            option.disabled = false;
+        });
+        showQuestion(currentQuestionIndex);
+        startTimer(); // Start the timer for the next question
+        nextButton.style.display = "none";
+        retakeButton.style.display = "none";
+    } else {
+        endQuiz();
+    }
+}
+
+// ... (rest of your JavaScript)
+
+
+startQuiz();
+
+
+    </script>
+</body>
+</html>
